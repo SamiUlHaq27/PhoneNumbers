@@ -14,11 +14,14 @@ db_con.cur.execute(database.messages_table)
 
 class ScraperPipeline:
     def process_item(self, item, spider):
-        if type(item) == items.NumberItem:
-            db_con.insert_number(item)
-        elif type(item) == items.MessageItem:
-            db_con.insert_message(item)
-        else:
-            raise Exception("Wrong item type in pipelines")
-        db_con.con.commit()
+        try:
+            if type(item) == items.NumberItem:
+                db_con.insert_number(item)
+            elif type(item) == items.MessageItem:
+                db_con.insert_message(item)
+            else:
+                raise Exception("Wrong item type in pipelines")
+            db_con.con.commit()
+        except Exception as e:
+            print(e)
         return item

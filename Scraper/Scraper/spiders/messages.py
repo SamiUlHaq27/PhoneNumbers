@@ -1,20 +1,28 @@
 import scrapy
+import json
 from ..pipelines import db_con
 from ..items import MessageItem
 
-def get_urls() -> list:
-    res = db_con.cur.execute("select link from number limit 5")
-    links = []
-    for i in res.fetchall():
-        links.append(i[0])
-    return links
+
+def get_urls() -> list[str]:
+    with open("start_urls.json","r") as f:
+        data = json.load(f)
+        urls = data["urls"]
+        return urls
+
+def get_number() -> str:
+    with open("start_urls.json","r") as f:
+        data = json.load(f)
+        number = data["number"]
+        return number
 
 class MessagesSpider(scrapy.Spider):
     name = "messages"
     allowed_domains = ["sms24.me"]
-    start_urls = ["https://sms24.me/en/numbers/3197010587774"]
+    start_urls = get_urls()
 
     def parse(self, response):
+        number = get_number()
         dls = response.css("dl")[:-1]
         dts_and_dds = []
         for dl in dls:
@@ -28,7 +36,7 @@ class MessagesSpider(scrapy.Spider):
             item["time"] = message[0].css("div::attr(data-created)").get()
             item["sender"] = message[1].css("label a::text").get()
             item["message"] = message[1].css("span::text").get()
-            item["number"] = "+"+response.url.split("/")[-1]
+            item["number"] = "+"+number
             yield item
 
         
